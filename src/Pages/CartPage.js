@@ -72,11 +72,11 @@ const CartPage = () => {
       try {
         if (isAuthenticated) {
           // Authenticated users fetch cart from backend
-          const response = await axios.get("http://localhost:5000/cart", {
+            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/cart`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
+            });
           setCartItems(response.data);
         } else {
           // Unauthenticated users fetch cart from local storage
@@ -101,7 +101,7 @@ const CartPage = () => {
       // Authenticated users update quantity in backend
       axios
         .patch(
-          `http://localhost:5000/cart/update/${productId}`,
+          `${process.env.REACT_APP_BACKEND_URL}/cart/update/${productId}`,
           { quantity: newQuantity },
           { headers: { Authorization: `Bearer ${token}` } }
         )
@@ -124,7 +124,7 @@ const CartPage = () => {
     if (isAuthenticated) {
       // Authenticated users remove item from backend
       axios
-        .delete(`http://localhost:5000/cart/remove/${productId}`, {
+        .delete(`${process.env.REACT_APP_BACKEND_URL}/cart/remove/${productId}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .catch(() => setError("Failed to remove item from cart."));

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import axios from 'axios'; // Import axios for making API requests
 
 const OrderSummary = ({ order }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
@@ -55,6 +56,42 @@ const OrderSummary = ({ order }) => (
 const ThankYouPage = () => {
   const location = useLocation();
   const order = location.state?.order;
+  
+  console.log("Order details:", order);
+
+  const handlePrintReceipt = async () => {
+    try {
+
+      console.log("Order object:", order); // Before making axios call
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/generate-receipt`, 
+        { 
+          order: order
+        }, 
+        {
+          responseType: 'blob',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: false
+        }
+      );
+  
+      if (response.data) {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `receipt_${order.orderId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error("Error generating receipt:", error);
+      alert("Failed to generate receipt. Please try again later.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -92,7 +129,7 @@ const ThankYouPage = () => {
                 Back to shopping
               </Link>
 
-              <button className="text-green-600 hover:text-green-700">
+              <button onClick={handlePrintReceipt} className="text-green-600 hover:text-green-700">
                 Print receipt
               </button>
             </div>
