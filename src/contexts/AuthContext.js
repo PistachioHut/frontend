@@ -1,65 +1,68 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import { refreshAccessToken } from '../utils/auth'; // Import the refresh token function
+import { refreshAccessToken } from '../utils/auth';
 
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true); // Added loading state for user data
 
-  // Check if the user is authenticated by checking the access token in localStorage
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       setIsAuthenticated(true);
       fetchUserData(token); // Fetch user data if the token exists
+    } else {
+      setUserLoading(false); // No token means no user, set loading to false
     }
   }, []);
 
-  // Fetch user data using the access token
   const fetchUserData = async (token) => {
-    console.log(token)
     try {
-      const response = await axios.get(process.env.REACT_APP_BACKEND_URL + '/user/data', {
-
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/user/data`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setUser(response.data);
     } catch (error) {
-      // If the access token is expired (401), attempt to refresh it
       if (error.response && error.response.status === 401) {
         const newAccessToken = await refreshAccessToken();
         if (newAccessToken) {
           localStorage.setItem('accessToken', newAccessToken);
           setIsAuthenticated(true);
-          fetchUserData(newAccessToken); // Fetch user data with new access token
+          fetchUserData(newAccessToken);
         } else {
-          setIsAuthenticated(false); // If refresh fails, log out the user
+          setIsAuthenticated(false);
           setUser(null);
         }
       }
+    } finally {
+      setUserLoading(false); // Always set loading to false once fetch is complete
     }
   };
 
-  // Login function to store access and refresh tokens
   const login = (accessToken, refreshToken) => {
     localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken); // Store refresh token securely
+    localStorage.setItem('refreshToken', refreshToken);
     setIsAuthenticated(true);
-    fetchUserData(accessToken); // Fetch user data after login
+    setUserLoading(true); // Set loading to true while fetching user data
+    fetchUserData(accessToken);
   };
 
-  // Logout function to remove both tokens from localStorage
   const logout = () => {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken'); // Also remove the refresh token
+    localStorage.removeItem('refreshToken');
     setIsAuthenticated(false);
     setUser(null);
+    setUserLoading(false); // Ensure loading is false after logout
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, userLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

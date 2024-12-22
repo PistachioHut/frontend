@@ -1,17 +1,14 @@
-import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useContext } from 'react';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const AdminHeader = () => {
-  const { user } = useAuth();
-
+  const { user } = useContext(AuthContext)
+  console.log(user)
   return (
     <header className="bg-white shadow">
       <div className="px-4 py-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Admin Dashboard
-        </h1>
         <p className="mt-1 text-sm text-gray-600">
-          Logged in as: {user?.name} ({user?.role})
+          Logged in as: {user?.username} ({user?.email}) ({user?.role})
         </p>
       </div>
     </header>

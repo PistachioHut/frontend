@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { AuthContext } from '../contexts/AuthContext';
 import AdminHeader from '../components/admin/AdminHeader';
 import Sidebar from '../components/admin/Sidebar';
 import ProductManagement from '../components/admin/ProductManagement';
@@ -12,17 +12,19 @@ import DiscountManagement from '../components/admin/DiscountManagement';
 import InvoiceManagement from '../components/admin/InvoiceManagement';
 import Analytics from '../components/admin/Analytics';
 import ReturnManagement from '../components/admin/ReturnManagement';
+import Header from '../components/Header';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  
+  const { user } = useContext(AuthContext)
+
   return (
     <div className="min-h-screen bg-gray-100">
+      <Header />
       <AdminHeader />
       <div className="flex">
         <Sidebar userRole={user?.role} />
         <main className="flex-1 p-6">
-          {user?.role === 'PRODUCT_MANAGER' && (
+          {user?.role === 'Product Manager' && (
             <Routes>
               <Route path="products" element={<ProductManagement />} />
               <Route path="categories" element={<CategoryManagement />} />
@@ -31,7 +33,7 @@ const AdminDashboard = () => {
             </Routes>
           )}
           
-          {user?.role === 'SALES_MANAGER' && (
+          {user?.role === 'Sales Manager' && (
             <Routes>
               <Route path="pricing" element={<PriceManagement />} />
               <Route path="discounts" element={<DiscountManagement />} />

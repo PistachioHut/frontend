@@ -54,11 +54,13 @@ const LoginPage = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent default form submission
     try {
+      console.log(process.env.REACT_APP_BACKEND_URL)
       const response = await axios.post(process.env.REACT_APP_BACKEND_URL + '/login', {
         identifier: email,
         password,
       });
 
+      console.log(response.data)
       localStorage.setItem('accessToken', response.data.access_token);
       localStorage.setItem('refreshToken', response.data.refresh_token);
       login(response.data.access_token, response.data.refresh_token)

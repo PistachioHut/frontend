@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { User, ShoppingCart, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import { AuthContext } from '../contexts/AuthContext';
 
 const SimpleDialog = ({ isOpen, onClose, title, content }) => {
@@ -65,6 +64,7 @@ const Header = () => {
             <Link to="/products" className="text-gray-700 hover:text-green-600">Products</Link>
             <Link to="/about" className="text-gray-700 hover:text-green-600">About Us</Link>
             <Link to="/contact" className="text-gray-700 hover:text-green-600">Contact</Link>
+            {(user?.role=="Sales Manager" || user?.role=="Product Manager")?<Link to="/admin" className="text-gray-700 hover:text-green-600">Admin Page</Link>:""}
           </nav>
           <div className="flex items-center space-x-4">
             <div className="relative">

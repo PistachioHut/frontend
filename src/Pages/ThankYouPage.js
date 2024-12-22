@@ -1,9 +1,9 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import axios from 'axios'; // Import axios for making API requests
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { CheckCircle } from "lucide-react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import axios from "axios";
 
 const OrderSummary = ({ order }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
@@ -13,7 +13,7 @@ const OrderSummary = ({ order }) => (
           <div key={item.product_id || index} className="flex items-center space-x-4 mb-4">
             <div className="relative">
               <img
-                src={item.image_link || '/assets/images/default.png'}
+                src={item.image_link || "/assets/images/default.png"}
                 alt={item.name || "Unknown item"}
                 className="w-16 h-16 object-cover rounded-md"
               />
@@ -23,9 +23,7 @@ const OrderSummary = ({ order }) => (
             </div>
             <div>
               <h3 className="font-medium">{item.name || "Unknown Item"}</h3>
-              <p className="text-green-600">
-                ${Number(item.price || 0).toFixed(2)}
-              </p>
+              <p className="text-green-600">${Number(item.price || 0).toFixed(2)}</p>
             </div>
           </div>
         ))}
@@ -52,44 +50,60 @@ const OrderSummary = ({ order }) => (
   </div>
 );
 
-
 const ThankYouPage = () => {
   const location = useLocation();
   const order = location.state?.order;
-  
+
   console.log("Order details:", order);
 
-  const handlePrintReceipt = async () => {
+  const handleGenerateAndEmailReceipt = async () => {
     try {
-
-      console.log("Order object:", order); // Before making axios call
+      // Generate the receipt
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKEND_URL}/generate-receipt`, 
-        { 
-          order: order
-        }, 
+        `${process.env.REACT_APP_BACKEND_URL}/generate-receipt`,
+        { order },
         {
-          responseType: 'blob',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: false
+          responseType: "blob",
+          headers: { "Content-Type": "application/json" },
         }
       );
-  
+
       if (response.data) {
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
+        // Create URL for the receipt
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+
+        // Open the receipt in a new tab
+        window.open(url, "_blank");
+
+        // Allow user to download the receipt
+        const link = document.createElement("a");
         link.href = url;
-        link.setAttribute('download', `receipt_${order.orderId}.pdf`);
+        link.setAttribute("download", `receipt_${order.orderId}.pdf`);
         document.body.appendChild(link);
         link.click();
-        window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
+        
+        const token = localStorage.getItem('accessToken');
+
+        // Send the receipt via email
+        const emailResponse = await axios.post(
+          `${process.env.REACT_APP_BACKEND_URL}/send-receipt`,
+          {
+            order,
+            recipient_email: order.email, // Assuming `email` is part of the order object
+            subject: "Your Order Receipt",
+            content: "<p>Thank you for your order! Your receipt is attached.</p>",
+          },
+          {
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          }
+        );
+
       }
     } catch (error) {
-      console.error("Error generating receipt:", error);
-      alert("Failed to generate receipt. Please try again later.");
+      console.error("Error generating or sending receipt:", error);
+      alert("Failed to process receipt. Please try again later.");
     }
   };
 
@@ -129,8 +143,11 @@ const ThankYouPage = () => {
                 Back to shopping
               </Link>
 
-              <button onClick={handlePrintReceipt} className="text-green-600 hover:text-green-700">
-                Print receipt
+              <button
+                onClick={handleGenerateAndEmailReceipt}
+                className="text-green-600 hover:text-green-700"
+              >
+                View, Download & Email Receipt
               </button>
             </div>
           </div>

@@ -25,6 +25,15 @@ const OrderSummary = ({ cartItems, total, shippingCost }) => (
   </div>
 );
 
+const generateOrderNumber = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let orderNumber = '';
+  for (let i = 0; i < 10; i++) {
+    orderNumber += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return orderNumber;
+};
+
 const PaymentPage = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -123,25 +132,29 @@ const PaymentPage = () => {
       // Step 1: Deduct Stock for Each Product
       for (let item of cartItems) {
         if (item.quantity > 0) {
-            await axios.patch(
+          await axios.patch(
             `${process.env.REACT_APP_BACKEND_URL}/products/stock/decrease/${item.product_id}`,
             { quantity: item.quantity },
             {
               headers: {
-              Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
               },
             }
-            );
+          );
         }
       }
   
-      // Step 2: Add Order to Backend
+      // Step 2: Generate Order Number
+      const orderNumber = generateOrderNumber();
+      console.log(orderNumber)
+      // Step 3: Add Order to Backend
       const orderData = {
+        order_number: orderNumber, // Include the order number
         email: formData.email,
         shipping_method: formData.shipping,
         shipping_address: formData.address,
         shipping_cost: shippingCost,
-        items: cartItems.map(item => ({
+        items: cartItems.map((item) => ({
           product_id: item.product_id,
           name: item.name,
           price: item.price,
@@ -151,26 +164,35 @@ const PaymentPage = () => {
         total_price: totalCost,
       };
   
-      await axios.post(process.env.REACT_APP_BACKEND_URL + '/orders/add', orderData, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/orders/add`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
   
-      // Step 3: Clear the Cart
-      await axios.delete(process.env.REACT_APP_BACKEND_URL + '/cart/clear', {
+      // Step 4: Clear the Cart
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/cart/clear`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
   
-      // Step 4: Navigate to Thank You Page
+      // Step 5: Send the Receipt Email
+      /*
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/send-receipt`, {
+        order: orderData,
+        recipient_email: formData.email,
+      });
+      */
+      // Step 6: Navigate to Thank You Page
       navigate('/thank-you', { state: { order: orderData } });
     } catch (err) {
       console.error('Failed to complete payment or process order', err);
       alert('An error occurred during the payment process.');
     }
   };
+  
+  
   
 
   return (
