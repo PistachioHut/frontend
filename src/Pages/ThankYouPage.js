@@ -53,45 +53,50 @@ const OrderSummary = ({ order }) => (
 const ThankYouPage = () => {
   const location = useLocation();
   const order = location.state?.order;
-
-  console.log("Order details:", order);
-
-  const handleGenerateAndEmailReceipt = async () => {
+  console.log(order)
+  const handleGenerateAndStoreReceipt = async () => {
     try {
-      // Generate the receipt
+      const token = localStorage.getItem("accessToken");
+  
+      // Call backend to generate, store, and save metadata for the receipt
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/generate-receipt`,
         { order },
         {
-          responseType: "blob",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         }
       );
+  
+      if (response.data && response.data.receipt_url) {
+        const receipt_url = response.data.receipt_url;
+        console.log(`Public receipt URL: ${receipt_url}`);
+  
+        const viewerHtml = `
+          <html>
+            <body style="margin:0;overflow:hidden">
+              <iframe src="${receipt_url}" style="border:none;width:100%;height:100%"></iframe>
+            </body>
+          </html>
+        `;
+        const viewerBlob = new Blob([viewerHtml], { type: "text/html" });
+        const viewerUrl = URL.createObjectURL(viewerBlob);
+        window.open(viewerUrl, "_blank");
 
-      if (response.data) {
-        // Create URL for the receipt
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
-
-        // Open the receipt in a new tab
-        window.open(url, "_blank");
-
-        // Allow user to download the receipt
+        // Allow the user to download the receipt
+        /*
         const link = document.createElement("a");
-        link.href = url;
+        link.href = receipt_url;
         link.setAttribute("download", `receipt_${order.orderId}.pdf`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        const token = localStorage.getItem('accessToken');
-
-        // Send the receipt via email
+        */
+        // Automatically email the receipt
         const emailResponse = await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/send-receipt`,
           {
             order,
-            recipient_email: order.email, // Assuming `email` is part of the order object
+            recipient_email: order.email,
             subject: "Your Order Receipt",
             content: "<p>Thank you for your order! Your receipt is attached.</p>",
           },
@@ -99,13 +104,17 @@ const ThankYouPage = () => {
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           }
         );
-
+  
+      } else {
+        throw new Error("Receipt URL is not available in the response.");
       }
     } catch (error) {
-      console.error("Error generating or sending receipt:", error);
+      console.error("Error generating or storing receipt:", error);
       alert("Failed to process receipt. Please try again later.");
     }
   };
+  
+  
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -144,10 +153,10 @@ const ThankYouPage = () => {
               </Link>
 
               <button
-                onClick={handleGenerateAndEmailReceipt}
+                onClick={handleGenerateAndStoreReceipt}
                 className="text-green-600 hover:text-green-700"
               >
-                View, Download & Email Receipt
+                View & Email Receipt
               </button>
             </div>
           </div>
