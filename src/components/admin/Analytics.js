@@ -4,7 +4,7 @@ import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 
 const Analytics = () => {
-  const [startDate, setStartDate] = useState("1970-01-01"); // Start from a far past date
+  const [startDate, setStartDate] = useState("2024-01-01"); // Start from a far past date
   const [endDate, setEndDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0]; // Format today's date as "YYYY-MM-DD"

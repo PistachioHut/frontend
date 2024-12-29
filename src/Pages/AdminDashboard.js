@@ -4,7 +4,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import AdminHeader from '../components/admin/AdminHeader';
 import Sidebar from '../components/admin/Sidebar';
 import ProductManagement from '../components/admin/ProductManagement';
-import CategoryManagement from '../components/admin/CategoryManagement';
+import StockManagement from '../components/admin/StockManagement';
 import DeliveryManagement from '../components/admin/DeliveryManagement';
 import CommentModeration from '../components/admin/CommentModeration';
 import PriceManagement from '../components/admin/PriceManagement';
@@ -27,7 +27,7 @@ const AdminDashboard = () => {
           {user?.role === 'Product Manager' && (
             <Routes>
               <Route path="products" element={<ProductManagement />} />
-              <Route path="categories" element={<CategoryManagement />} />
+              <Route path="stock" element={<StockManagement />} />
               <Route path="deliveries" element={<DeliveryManagement />} />
               <Route path="comments" element={<CommentModeration />} />
             </Routes>

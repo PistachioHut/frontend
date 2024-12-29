@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { FileText } from "lucide-react";
 
 const InvoiceManagement = () => {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState("2024-01-01"); // Start from a far past date
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // Format today's date as "YYYY-MM-DD"
+  });
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
 
   const fetchInvoices = async () => {
     if (!startDate || !endDate) {

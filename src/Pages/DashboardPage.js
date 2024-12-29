@@ -7,14 +7,68 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const OrderPanel = ({ order }) => {
+  const { user, logout } = useContext(AuthContext); // Use AuthContext
   const [isOpen, setIsOpen] = useState(false);
+  const [refundStatus, setRefundStatus] = useState(null);
   const daysSinceOrder = Math.floor((new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24));
   const canRefund = daysSinceOrder <= 30;
-
-  const formattedStatus = order.refund_processing;
-
-  // Calculate total cost per item
+  
   const calculateItemTotal = (price, quantity) => (price * quantity).toFixed(2);
+
+  useEffect(() => {
+    const checkRefundStatus = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/refund-status`, {
+          params: { order_id: order.order_number },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        setRefundStatus(response.data.status);
+      } catch (error) {
+        console.error("Failed to fetch refund status:", error);
+      }
+    };
+  
+    checkRefundStatus();
+  }, [order.order_number]);
+
+  const handleRefund = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/refund`,
+        { order_number: order.order_number, email: user?.email, created_at: order.created_at, order: order },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setRefundStatus("Processing");
+      alert("Refund request submitted successfully.");
+    } catch (error) {
+      console.error("Failed to process refund:", error);
+      alert("Failed to submit refund request.");
+    }
+  };
+
+  const getRefundButtonState = () => {
+    if (refundStatus === "Processing") {
+      return { disabled: true, message: "Processing Refund", className: "bg-gray-200 text-gray-500 cursor-not-allowed" };
+    }
+
+    if (refundStatus === "Denied") {
+      return { disabled: true, message: "Refund Denied", className: "bg-gray-200 text-gray-500 cursor-not-allowed" };
+    }
+
+    if (!canRefund) {
+      return { disabled: true, message: "Refund Expired", className: "bg-gray-200 text-gray-500 cursor-not-allowed" };
+    }
+
+    return { disabled: false, message: "Refund", className: "bg-red-500 text-white hover:bg-red-600" };
+  };
+
+  const refundButtonState = getRefundButtonState();
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-100">
@@ -37,7 +91,7 @@ const OrderPanel = ({ order }) => {
         </div>
         <div className="px-2">
           <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Status</p>
-          <p className="font-medium">{formattedStatus}</p>
+          <p className="font-medium">{refundStatus || "N/A"}</p>
         </div>
         <div className="px-2">
           <button
@@ -49,18 +103,14 @@ const OrderPanel = ({ order }) => {
         </div>
         <div className="px-2">
           <button
-            disabled={!canRefund}
-            className={`w-full px-3 py-1 text-sm rounded-md transition-colors ${
-              canRefund
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
+            onClick={handleRefund}
+            disabled={refundButtonState.disabled}
+            className={`w-full px-3 py-1 text-sm rounded-md transition-colors ${refundButtonState.className}`}
           >
-            Refund
+            {refundButtonState.message}
           </button>
         </div>
       </div>
-
       {isOpen && (
         <div className="mt-4 pt-4 border-t border-gray-100">
           <h4 className="font-medium mb-2 text-sm uppercase tracking-wider text-gray-500">Order Details</h4>

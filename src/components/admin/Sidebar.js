@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 const Sidebar = ({ userRole }) => {
   const productManagerLinks = [
     { path: 'products', label: 'Products' },
-    { path: 'categories', label: 'Categories' },
+    { path: 'stock', label: 'Stock' },
     { path: 'deliveries', label: 'Deliveries' },
     { path: 'comments', label: 'Comments' }
   ];
@@ -18,7 +18,7 @@ const Sidebar = ({ userRole }) => {
     { path: 'returns', label: 'Returns' }
   ];
 
-  const links = userRole === 'PRODUCT_MANAGER' ? productManagerLinks : salesManagerLinks;
+  const links = userRole === 'Product Manager' ? productManagerLinks : salesManagerLinks;
 
   return (
     <nav className="w-64 bg-gray-800 min-h-screen p-4">
