@@ -15,10 +15,9 @@ const AnimatedLoadingScreen = () => {
   );
 };
 
-const ProductCard = ({ id, name, price, image, stockCount }) => {
+const ProductCard = ({ id, name, price, discountedPrice, image, stockCount }) => {
   const navigate = useNavigate();
 
-  console.log(image)
   const handleClick = () => {
     navigate(`/product/${id}`);
   };
@@ -37,7 +36,18 @@ const ProductCard = ({ id, name, price, image, stockCount }) => {
       </div>
       <div className="p-4">
         <h3 className="text-sm font-medium text-gray-900">{name}</h3>
-        <p className="mt-1 text-lg font-semibold text-green-600">${price}</p>
+        <div className="mt-1 flex items-center gap-2">
+          {discountedPrice < price ? (
+            <>
+              <span className="text-lg font-semibold text-red-600 line-through relative">
+                ${price}
+              </span>
+              <span className="text-lg font-semibold text-green-600">${discountedPrice}</span>
+            </>
+          ) : (
+            <span className="text-lg font-semibold text-green-600">${price}</span>
+          )}
+        </div>
       </div>
       {stockCount === 0 && (
         <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs">
@@ -48,11 +58,11 @@ const ProductCard = ({ id, name, price, image, stockCount }) => {
   );
 };
 
-
 const ProductsPage = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('recommended');
+  const [sortOrder, setSortOrder] = useState('asc'); // Add sort order state
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,36 +71,64 @@ const ProductsPage = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(process.env.REACT_APP_BACKEND_URL + '/products/all');
+        const productList = response.data;
 
-        console.log(response.data); // Debugging: Check this output
-        setProducts(response.data);
-        localStorage.setItem('products', JSON.stringify(response.data));
+        const productsWithRatings = [];
+        for (const product of productList) {
+          try {
+            const reviewsResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/reviews/${product.id}`);
+            const reviews = reviewsResponse.data.reviews || [];
+
+            const approvedReviews = reviews.filter((review) => review.approved);
+            const averageRating =
+              approvedReviews.length > 0
+                ? approvedReviews.reduce((sum, review) => sum + review.rating, 0) / approvedReviews.length
+                : 3;
+
+            productsWithRatings.push({ ...product, averageRating });
+          } catch (err) {
+            console.error(`Failed to fetch reviews for product ${product.id}:`, err);
+            productsWithRatings.push({ ...product, averageRating: 3 });
+          }
+        }
+
+        setProducts(productsWithRatings);
+        localStorage.setItem('products', JSON.stringify(productsWithRatings));
       } catch (err) {
         setError('Failed to load products');
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchProducts();
   }, []);
-  
 
   const filteredAndSortedProducts = products
-    .filter(product =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => {
+      let compareValue;
       switch (sortOption) {
-        case 'price-asc':
-          return a.price - b.price;
-        case 'price-desc':
-          return b.price - a.price;
+        case 'price':
+          compareValue = a.price - b.price;
+          break;
         case 'popularity':
-          return b.popularity - a.popularity;
+          compareValue = a.popularity - b.popularity;
+          break;
+        case 'rating':
+          compareValue = a.averageRating - b.averageRating;
+          break;
+        case 'category':
+          compareValue = a.category.localeCompare(b.category);
+          break;
         default:
-          return b.popularity - a.popularity;
+          compareValue = b.popularity - a.popularity;
       }
+      return sortOrder === 'asc' ? compareValue : -compareValue; // Adjust based on sort order
     });
 
   if (loading) {
@@ -127,10 +165,20 @@ const ProductsPage = () => {
               onChange={(e) => setSortOption(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="recommended">Recommended</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
-              <option value="popularity">Most Popular</option>
+              <option value="recommended">Default</option>
+              <option value="price">Price</option>
+              <option value="popularity">Popularity</option>
+              <option value="rating">Rating</option>
+              <option value="category">Category</option>
+            </select>
+
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
             </select>
           </div>
         </div>
@@ -142,11 +190,13 @@ const ProductsPage = () => {
               id={product.id}
               name={product.name}
               price={product.price}
+              discountedPrice={product.discounted_price || product.price} // Default to price if no discount
               image={product.image_link}
               stockCount={product.stockCount}
             />
           ))}
         </div>
+
 
         {filteredAndSortedProducts.length === 0 && (
           <div className="text-center py-8 text-gray-500">

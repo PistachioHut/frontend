@@ -146,10 +146,10 @@ const PaymentPage = () => {
   
       // Step 2: Generate Order Number
       const orderNumber = generateOrderNumber();
-      console.log(orderNumber)
+  
       // Step 3: Add Order to Backend
       const orderData = {
-        order_number: orderNumber, // Include the order number
+        order_number: orderNumber,
         email: formData.email,
         shipping_method: formData.shipping,
         shipping_address: formData.address,
@@ -170,20 +170,20 @@ const PaymentPage = () => {
         },
       });
   
-      // Step 4: Clear the Cart
+      // Step 4: Create Product Deliveries
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product-deliveries/create`, orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      // Step 5: Clear the Cart
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/cart/clear`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
   
-      // Step 5: Send the Receipt Email
-      /*
-      await axios.post(`${process.env.REACT_APP_BACKEND_URL}/send-receipt`, {
-        order: orderData,
-        recipient_email: formData.email,
-      });
-      */
       // Step 6: Navigate to Thank You Page
       navigate('/thank-you', { state: { order: orderData } });
     } catch (err) {
@@ -192,9 +192,6 @@ const PaymentPage = () => {
     }
   };
   
-  
-  
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

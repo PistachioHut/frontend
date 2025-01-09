@@ -23,7 +23,12 @@ const DeliveryManagement = () => {
         }
       );
 
-      setDeliveries(response.data.deliveries);
+      // Exclude completed orders
+      const incompleteDeliveries = response.data.deliveries.filter(
+        (delivery) => delivery.status != "complete"
+      );
+      console.log(incompleteDeliveries);
+      setDeliveries(incompleteDeliveries);
     } catch (err) {
       console.error("Failed to fetch deliveries:", err);
       setError("Failed to load deliveries. Please try again.");
@@ -32,7 +37,7 @@ const DeliveryManagement = () => {
     }
   };
 
-  const markAsCompleted = async (deliveryId) => {
+  const markAsCompleted = async (deliveryId, customerId) => {
     try {
       const token = localStorage.getItem("accessToken");
       await axios.patch(
@@ -40,6 +45,7 @@ const DeliveryManagement = () => {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
+          params: { user_email: customerId },
         }
       );
 
@@ -68,7 +74,7 @@ const DeliveryManagement = () => {
               <th className="px-4 py-2 border border-gray-200">Quantity</th>
               <th className="px-4 py-2 border border-gray-200">Total Price</th>
               <th className="px-4 py-2 border border-gray-200">Delivery Address</th>
-              <th className="px-4 py-2 border border-gray-200">Completed</th>
+              <th className="px-4 py-2 border border-gray-200">Invoice</th>
               <th className="px-4 py-2 border border-gray-200">Actions</th>
             </tr>
           </thead>
@@ -94,20 +100,28 @@ const DeliveryManagement = () => {
                   {delivery.delivery_address}
                 </td>
                 <td className="px-4 py-2 border border-gray-200">
-                  {delivery.completed ? "Yes" : "No"}
+                  {delivery.invoice_url ? (
+                    <a
+                      href={delivery.invoice_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline"
+                    >
+                      View Invoice
+                    </a>
+                  ) : (
+                    "No Invoice"
+                  )}
                 </td>
                 <td className="px-4 py-2 border border-gray-200">
-                  {!delivery.completed && (
-                    <button
-                      onClick={() => markAsCompleted(delivery.delivery_id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                    >
-                      Mark as Completed
-                    </button>
-                  )}
-                  {delivery.completed && (
-                    <span className="text-gray-500">Completed</span>
-                  )}
+                  <button
+                    onClick={() =>
+                      markAsCompleted(delivery.delivery_id, delivery.customer_id)
+                    }
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                  >
+                    Mark as Completed
+                  </button>
                 </td>
               </tr>
             ))}

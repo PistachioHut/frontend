@@ -358,9 +358,22 @@ const ProductDetailsPage = () => {
           </div>
 
           {/* Product Details */}
+          {/* Product Details */}
           <div className="space-y-6">
             <h1 className="text-2xl font-medium text-gray-900">{product.name}</h1>
-            <div className="text-xl font-semibold text-green-600">${product.price}</div>
+            <div className="mt-1 flex items-center gap-2">
+              {product.discounted_price < product.price ? (
+                <>
+                  <span className="text-xl font-semibold text-red-600 line-through relative">
+                    ${product.price}
+                  </span>
+                  <span className="text-xl font-semibold text-green-600">${product.discounted_price}</span>
+                </>
+              ) : (
+                <span className="text-xl font-semibold text-green-600">${product.price}</span>
+              )}
+            </div>
+
 
             {/* Quantity Selector */}
             <div className="space-y-2">
