@@ -47,17 +47,17 @@ const DiscountManagement = () => {
     }));
   };
 
-  // Send updated discounted price to the backend
   const handleUpdateDiscountedPrice = async (id) => {
     const newDiscountedPrice = editedDiscountedPrices[id];
-    if (!newDiscountedPrice) return; // Do nothing if no new discounted price is entered
-
+    if (!newDiscountedPrice) return;
+  
     const updatedData = {
-      discounted_price: parseFloat(newDiscountedPrice), // Only update the discounted_price
+      discounted_price: parseFloat(newDiscountedPrice),
     };
-
+  
     const token = localStorage.getItem("accessToken");
     try {
+      // Update the product discounted_price in the backend
       await axios.patch(
         `${process.env.REACT_APP_BACKEND_URL}/products/update/${id}`,
         updatedData,
@@ -67,8 +67,19 @@ const DiscountManagement = () => {
           },
         }
       );
-
-      // Update the product discounted_price in the state only after a successful backend update
+  
+      // Notify users who have the product wishlisted
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/notify-wishlist-users`,
+        { product_id: id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      // Update the product in the state
       setProducts((prevProducts) =>
         prevProducts.map((product) =>
           product.id === id
@@ -76,12 +87,14 @@ const DiscountManagement = () => {
             : product
         )
       );
-
+  
+      alert("Discount updated and users notified successfully.");
     } catch (err) {
-      console.error("Failed to update discounted price:", err);
-      alert("Failed to update discounted price.");
+      console.error("Failed to update discounted price or notify users:", err);
+      alert("Failed to update discounted price or notify users.");
     }
   };
+  
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;

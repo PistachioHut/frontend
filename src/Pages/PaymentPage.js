@@ -11,7 +11,18 @@ const OrderSummary = ({ cartItems, total, shippingCost }) => (
     <div className="space-y-3 border-t border-gray-200 pt-4">
       <div className="flex justify-between">
         <span className="text-gray-600">Subtotal</span>
-        <span className="font-medium">${(total - shippingCost).toFixed(2)}</span>
+        <span className="font-medium">
+          ${(cartItems.reduce(
+            (sum, item) =>
+              sum +
+              (item.discounted_price && item.discounted_price < item.price
+                ? item.discounted_price
+                : item.price) *
+                item.quantity,
+            0
+          ) - shippingCost).toFixed(2)}
+        </span>
+
       </div>
       <div className="flex justify-between">
         <span className="text-gray-600">Shipping</span>
@@ -82,7 +93,7 @@ const PaymentPage = () => {
               notification: "Out of stock",
             });
           } else if (product.quantity_in_stock < item.quantity) {
-            total += product.price * product.quantity_in_stock;
+            total += product.discounted_price * product.quantity_in_stock;
             updatedCart.push({
               ...item,
               quantity: product.quantity_in_stock,
@@ -91,7 +102,7 @@ const PaymentPage = () => {
               notification: `Only ${product.quantity_in_stock} available.`,
             });
           } else {
-            total += product.price * item.quantity;
+            total += product.discounted_price * item.quantity;
             updatedCart.push({
               ...item,
               maxAvailable: product.quantity_in_stock,
@@ -114,7 +125,8 @@ const PaymentPage = () => {
   useEffect(() => {
     const shippingCost = formData.shipping === "Express Shipping - $9.99" ? 9.99 : 0;
     setShippingCost(shippingCost);
-    setTotalCost(cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0) + shippingCost);
+    setTotalCost(totalCost + shippingCost);
+
   }, [formData.shipping, cartItems]);
 
   const handleEdit = (field) => {
@@ -157,7 +169,7 @@ const PaymentPage = () => {
         items: cartItems.map((item) => ({
           product_id: item.product_id,
           name: item.name,
-          price: item.price,
+          price: item.discounted_price,
           quantity: item.quantity,
           image_link: item.image_link,
         })),
@@ -183,7 +195,7 @@ const PaymentPage = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+      console.log(orderData.total_price)
       // Step 6: Navigate to Thank You Page
       navigate('/thank-you', { state: { order: orderData } });
     } catch (err) {
@@ -328,7 +340,16 @@ const PaymentPage = () => {
                   <img src={item.image_link} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-green-600">${item.price}</p>
+                    <p className="text-green-600">
+                      {item.discounted_price && item.discounted_price < item.price ? (
+                        <>
+                          <span className="line-through text-gray-500">${item.price}</span>{" "}
+                          <span>${item.discounted_price.toFixed(2)}</span>
+                        </>
+                      ) : (
+                        <span>${item.price}</span>
+                      )}
+                    </p>
                     {item.notification && <p className="text-sm text-red-600">{item.notification}</p>}
                   </div>
                 </div>

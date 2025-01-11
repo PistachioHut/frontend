@@ -23,14 +23,14 @@ const OrderSummary = ({ order }) => (
             </div>
             <div>
               <h3 className="font-medium">{item.name || "Unknown Item"}</h3>
-              <p className="text-green-600">${Number(item.price || 0).toFixed(2)}</p>
+              <p className="text-green-600">${Number(item.price || 0)}</p>
             </div>
           </div>
         ))}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Subtotal</span>
-            <span>${(Number(order.total_price || 0) - (order.shipping === "Express Shipping - $9.99" ? 9.99 : 0)).toFixed(2)}</span>
+            <span>${(Number(order.total_price || 0) - (order.shipping === "Express Shipping - $9.99" ? 9.99 : 0))}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Shipping</span>
@@ -40,7 +40,7 @@ const OrderSummary = ({ order }) => (
           </div>
           <div className="flex justify-between items-center pt-3 border-t border-gray-200">
             <span className="font-medium">Total</span>
-            <span className="text-green-600">${Number(order.total_price || 0).toFixed(2)}</span>
+            <span className="text-green-600">${Number(order.total_price || 0)}</span>
           </div>
         </div>
       </>
@@ -57,7 +57,7 @@ const ThankYouPage = () => {
   const handleGenerateAndStoreReceipt = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-  
+      console.log(order)
       // Call backend to generate, store, and save metadata for the receipt
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/generate-receipt`,
@@ -135,7 +135,7 @@ const ThankYouPage = () => {
 
             <h1 className="text-2xl font-medium mb-2">Payment Confirmed</h1>
             <p className="text-green-600 text-sm mb-4">
-              ORDER #{order ? order.orderId || "N/A" : "Loading..."}
+              ORDER #{order ? order.order_number || "N/A" : "Loading..."}
             </p>
 
             <p className="text-gray-600 mb-6 max-w-md">

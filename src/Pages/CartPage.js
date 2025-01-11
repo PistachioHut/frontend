@@ -27,7 +27,21 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => (
         </div>
       </div>
     </td>
-    <td className="py-4 text-gray-900">${item.price}</td>
+    <td className="py-4 text-gray-900">
+      <div className="flex items-center space-x-2">
+        {item.discounted_price && item.discounted_price < item.price ? (
+          <>
+            <span className="line-through text-gray-500 relative">
+              ${item.price}
+            </span>
+            <span className="text-green-600 font-medium">${item.discounted_price}</span>
+          </>
+        ) : (
+          <span>${item.price}</span>
+        )}
+      </div>
+    </td>
+
     <td className="py-4">
       <div className="flex items-center space-x-2">
         <button
@@ -52,7 +66,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemove }) => (
       </div>
     </td>
     <td className="py-4 text-right text-gray-900">
-      ${(item.price * item.quantity).toFixed(2)}
+      ${(item.discounted_price * item.quantity).toFixed(2)}
     </td>
   </tr>
 );
@@ -150,9 +164,13 @@ const CartPage = () => {
   };
 
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) =>
+      sum + (item.discounted_price && item.discounted_price < item.price
+        ? item.discounted_price
+        : item.price) * item.quantity,
     0
   );
+  
 
   if (loading) {
     return (

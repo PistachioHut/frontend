@@ -34,16 +34,55 @@ const ReturnManagement = () => {
       const token = localStorage.getItem("accessToken");
       await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/refund/accept`,
-        { order_id: order_id, user_email: userEmail, product_id: productId },
+        { order_id, user_email: userEmail, product_id: productId },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      alert("Refund request accepted.");
+
+      // Send refund email
+      await handleSendRefundEmail(userEmail, order_id, productId);
+
+      alert("Refund request accepted, and email sent.");
       fetchRefundRequests();
     } catch (err) {
       console.error("Failed to accept refund request:", err);
       alert("Failed to accept refund request.");
+    }
+  };
+
+  const handleSendRefundEmail = async (email, order_id, productId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const refundRequest = refundRequests.find(
+        (request) => request.product_id === productId && request.order_id === order_id
+      );
+
+      if (!refundRequest) throw new Error("Refund request not found");
+
+      const totalCost = (refundRequest.product.price * refundRequest.product.quantity).toFixed(2);
+
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/send-refund-email`,
+        {
+          email,
+          subject: "Refund Confirmation",
+          content: `
+            <p>Dear Customer,</p>
+            <p>Your refund for the product <strong>${refundRequest.product.name}</strong> (Quantity: ${refundRequest.product.quantity}) has been processed.</p>
+            <p>Total Refunded Amount: <strong>$${totalCost}</strong></p>
+            <p>Thank you for shopping with us.</p>
+          `,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log("Refund email sent successfully.");
+    } catch (err) {
+      console.error("Failed to send refund email:", err);
+      alert("Refund email could not be sent.");
     }
   };
 
@@ -118,7 +157,6 @@ const ReturnManagement = () => {
                   </button>
                 </div>
               </div>
-
               {expandedRequest === request.product_id && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <h4 className="font-medium mb-2 text-sm uppercase tracking-wider text-gray-500">Product Details</h4>
