@@ -58,6 +58,14 @@ const ProductCard = ({ id, name, price, discountedPrice, image, stockCount }) =>
   );
 };
 
+const CategoryHeader = ({ category }) => (
+  <div className="col-span-full my-6 first:mt-0">
+    <h2 className="text-xl font-semibold text-gray-800 pb-2 border-b-2 border-green-500">
+      {category}
+    </h2>
+  </div>
+);
+
 const ProductsPage = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,13 +112,38 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
-  const filteredAndSortedProducts = products
-    .filter(
+  const groupAndSortProducts = () => {
+    const filtered = products.filter(
       (product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => {
+    );
+
+    if (sortOption === 'category') {
+      // Group products by category
+      const groupedProducts = filtered.reduce((acc, product) => {
+        const category = product.category;
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(product);
+        return acc;
+      }, {});
+
+      // Sort categories and products within categories
+      const sortedCategories = Object.keys(groupedProducts).sort((a, b) => 
+        sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
+      );
+
+      return { 
+        groupedProducts, 
+        sortedCategories,
+        totalProducts: filtered.length 
+      };
+    }
+
+    // For other sort options, maintain existing sorting logic
+    const sortedProducts = filtered.sort((a, b) => {
       let compareValue;
       switch (sortOption) {
         case 'price':
@@ -122,14 +155,17 @@ const ProductsPage = () => {
         case 'rating':
           compareValue = a.averageRating - b.averageRating;
           break;
-        case 'category':
-          compareValue = a.category.localeCompare(b.category);
-          break;
         default:
           compareValue = b.popularity - a.popularity;
       }
-      return sortOrder === 'asc' ? compareValue : -compareValue; // Adjust based on sort order
+      return sortOrder === 'asc' ? compareValue : -compareValue;
     });
+
+    return {
+      sortedProducts,
+      totalProducts: sortedProducts.length
+    };
+  };
 
   if (loading) {
     return <AnimatedLoadingScreen />;
@@ -138,6 +174,8 @@ const ProductsPage = () => {
   if (error) {
     return <div>{error}</div>;
   }
+
+  const { groupedProducts, sortedCategories, sortedProducts, totalProducts } = groupAndSortProducts();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -184,21 +222,45 @@ const ProductsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredAndSortedProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              discountedPrice={product.discounted_price || product.price} // Default to price if no discount
-              image={product.image_link}
-              stockCount={product.stockCount}
-            />
-          ))}
+          {sortOption === 'category' ? (
+            sortedCategories?.length > 0 ? (
+              sortedCategories.map(category => (
+                <React.Fragment key={category}>
+                  <CategoryHeader category={category} />
+                  {groupedProducts[category].map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      name={product.name}
+                      price={product.price}
+                      discountedPrice={product.discounted_price || product.price}
+                      image={product.image_link}
+                      stockCount={product.stockCount}
+                    />
+                  ))}
+                </React.Fragment>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                No products found matching your search.
+              </div>
+            )
+          ) : (
+            sortedProducts?.map((product) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={product.price}
+                discountedPrice={product.discounted_price || product.price}
+                image={product.image_link}
+                stockCount={product.stockCount}
+              />
+            ))
+          )}
         </div>
 
-
-        {filteredAndSortedProducts.length === 0 && (
+        {totalProducts === 0 && (
           <div className="text-center py-8 text-gray-500">
             No products found matching your search.
           </div>
