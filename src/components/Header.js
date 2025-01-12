@@ -69,7 +69,8 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             <div className="relative">
               {isAuthenticated ? (
-                <div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-700">Hello, {user?.username}!</span>
                   <button 
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex items-center space-x-2 text-gray-700 hover:text-green-600"
@@ -96,7 +97,11 @@ const Header = () => {
                   )}
                 </div>
               ) : (
-                <Link to={isAuthenticated ? "/dashboard" : "/login"} className="text-gray-700 hover:text-green-600">
+                <Link 
+                  to="/login" 
+                  className="flex items-center space-x-2 text-gray-700 hover:text-green-600"
+                >
+                  <span>Sign In</span>
                   <User className="w-6 h-6" />
                 </Link>
               )}
