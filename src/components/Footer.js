@@ -106,10 +106,10 @@ const Footer = () => {
               </li>
               <li>
                 <button
-                  onClick={() => handleDialogOpen(dialogContents.shipping.title, dialogContents.shipping.content)}
+                  onClick={() => handleDialogOpen(dialogContents.help.title, dialogContents.help.content)}
                   className="text-gray-400 hover:text-white text-left w-full"
                 >
-                  Shipping
+                  Help
                 </button>
               </li>
             </ul>
@@ -121,14 +121,6 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <button
-                  onClick={() => handleDialogOpen(dialogContents.help.title, dialogContents.help.content)}
-                  className="text-gray-400 hover:text-white text-left w-full"
-                >
-                  Help
-                </button>
-              </li>
-              <li>
-                <button
                   onClick={() => handleDialogOpen(dialogContents.terms.title, dialogContents.terms.content)}
                   className="text-gray-400 hover:text-white text-left w-full"
                 >
@@ -137,10 +129,18 @@ const Footer = () => {
               </li>
               <li>
                 <button
+                  onClick={() => handleDialogOpen(dialogContents.shipping.title, dialogContents.shipping.content)}
+                  className="text-gray-400 hover:text-white text-left w-full"
+                >
+                  Shipping
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => handleDialogOpen(dialogContents.privacy.title, dialogContents.privacy.content)}
                   className="text-gray-400 hover:text-white text-left w-full"
                 >
-                  Privacy Notice
+                  Return Policy
                 </button>
               </li>
             </ul>
