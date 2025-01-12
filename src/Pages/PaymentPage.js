@@ -127,10 +127,11 @@ const PaymentPage = () => {
   const handlePayNow = async () => {
     try {
       const token = localStorage.getItem("accessToken");
-
-      // Deduct Stock for Each Product
+  
+      // Deduct Stock and Increase Popularity for Each Product
       for (let item of cartItems) {
         if (item.quantity > 0) {
+          // Decrease Stock
           await axios.patch(
             `${process.env.REACT_APP_BACKEND_URL}/products/stock/decrease/${item.product_id}`,
             { quantity: item.quantity },
@@ -140,12 +141,23 @@ const PaymentPage = () => {
               },
             }
           );
+  
+          // Increase Popularity
+          await axios.patch(
+            `${process.env.REACT_APP_BACKEND_URL}/products/popularity/increase/${item.product_id}`,
+            { quantity: item.quantity },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
         }
       }
-
+  
       // Generate Order Number
       const orderNumber = generateOrderNumber();
-
+  
       // Add Order to Backend
       const orderData = {
         order_number: orderNumber,
@@ -162,27 +174,27 @@ const PaymentPage = () => {
         })),
         total_price: totalCost,
       };
-
+  
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/orders/add`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       // Create Product Deliveries
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product-deliveries/create`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       // Clear the Cart
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/cart/clear`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
+  
       // Navigate to Thank You Page
       navigate("/thank-you", { state: { order: orderData } });
     } catch (err) {
@@ -190,7 +202,7 @@ const PaymentPage = () => {
       alert("An error occurred during the payment process.");
     }
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

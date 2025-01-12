@@ -67,23 +67,56 @@ const OrderPanel = ({ order, setOrders }) => {
 
   const handleCancelOrder = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/orders/remove/${order.order_number}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      alert('Order canceled successfully.');
-
+      const token = localStorage.getItem("accessToken");
+  
+      // Iterate through each item in the order
+      for (const item of order.items) {
+        // Check if the product is not already refunded
+        if (!item.refund_processing || item.refund_processing !== "Complete") {
+          // Increment stock
+          await axios.patch(
+            `${process.env.REACT_APP_BACKEND_URL}/products/stock/increase/${item.product_id}`,
+            { quantity: item.quantity },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+  
+          // Decrease popularity
+          await axios.patch(
+            `${process.env.REACT_APP_BACKEND_URL}/products/popularity/decrease/${item.product_id}`,
+            { quantity: item.quantity },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        }
+      }
+  
+      // Cancel the order
+      await axios.delete(
+        `${process.env.REACT_APP_BACKEND_URL}/orders/remove/${order.order_number}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      alert("Order canceled successfully.");
+  
       // Re-fetch orders to update the state and remove the canceled order
-      const ordersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/user/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const ordersResponse = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/user/orders`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setOrders(ordersResponse.data.order_history);
     } catch (error) {
-      console.error('Failed to cancel order:', error);
-      alert('Failed to cancel order.');
+      console.error("Failed to cancel order, update stock, or adjust popularity:", error);
+      alert("Failed to cancel order.");
     }
-  };
+  };  
+  
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 mb-4 border border-gray-100">

@@ -32,6 +32,8 @@ const ReturnManagement = () => {
   const handleAcceptRefund = async (order_id, userEmail, productId) => {
     try {
       const token = localStorage.getItem("accessToken");
+  
+      // Process refund
       await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/refund/accept`,
         { order_id, user_email: userEmail, product_id: productId },
@@ -39,17 +41,44 @@ const ReturnManagement = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
+      // Find the refund request
+      const refundRequest = refundRequests.find(
+        (request) => request.product_id === productId && request.order_id === order_id
+      );
+  
+      if (refundRequest) {
+        // Increment stock for the refunded product
+        await axios.patch(
+          `${process.env.REACT_APP_BACKEND_URL}/products/stock/increase/${productId}`,
+          { quantity: refundRequest.product.quantity },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+  
+        // Decrease popularity for the refunded product
+        await axios.patch(
+          `${process.env.REACT_APP_BACKEND_URL}/products/popularity/decrease/${productId}`,
+          { quantity: refundRequest.product.quantity },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+  
       // Send refund email
       await handleSendRefundEmail(userEmail, order_id, productId);
-
-      alert("Refund request accepted, and email sent.");
+  
+      alert("Refund request accepted, stock updated, popularity decreased, and email sent.");
       fetchRefundRequests();
     } catch (err) {
       console.error("Failed to accept refund request:", err);
       alert("Failed to accept refund request.");
     }
   };
+  
+  
 
   const handleSendRefundEmail = async (email, order_id, productId) => {
     try {
