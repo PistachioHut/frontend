@@ -24,10 +24,6 @@ const OrderSummary = ({ cartItems, total, shippingCost }) => (
         </span>
 
       </div>
-      <div className="flex justify-between">
-        <span className="text-gray-600">Shipping</span>
-        <span className="font-medium">${shippingCost.toFixed(2)}</span>
-      </div>
       <div className="flex justify-between border-t border-gray-200 pt-3">
         <span className="font-medium">Total</span>
         <span className="font-medium">${total.toFixed(2)}</span>
@@ -50,11 +46,10 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [totalCost, setTotalCost] = useState(0);
-  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingCost] = useState(0); // Always 0 as shipping is free
   const [formData, setFormData] = useState({
     email: isAuthenticated && user ? user.email : "",
     address: "",
-    shipping: "Standard Shipping - FREE",
     cardNumber: "",
     holderName: "",
     expiration: "",
@@ -64,14 +59,13 @@ const PaymentPage = () => {
   const [editing, setEditing] = useState({
     email: false,
     address: false,
-    shipping: false,
   });
 
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await axios.get(process.env.REACT_APP_BACKEND_URL + '/cart', {
+        const token = localStorage.getItem("accessToken");
+        const response = await axios.get(process.env.REACT_APP_BACKEND_URL + "/cart", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -122,26 +116,19 @@ const PaymentPage = () => {
     fetchCartItems();
   }, []);
 
-  useEffect(() => {
-    const shippingCost = formData.shipping === "Express Shipping - $9.99" ? 9.99 : 0;
-    setShippingCost(shippingCost);
-    setTotalCost(totalCost + shippingCost);
-
-  }, [formData.shipping, cartItems]);
-
   const handleEdit = (field) => {
-    setEditing(prev => ({ ...prev, [field]: !prev[field] }));
+    setEditing((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePayNow = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-  
-      // Step 1: Deduct Stock for Each Product
+      const token = localStorage.getItem("accessToken");
+
+      // Deduct Stock for Each Product
       for (let item of cartItems) {
         if (item.quantity > 0) {
           await axios.patch(
@@ -155,15 +142,15 @@ const PaymentPage = () => {
           );
         }
       }
-  
-      // Step 2: Generate Order Number
+
+      // Generate Order Number
       const orderNumber = generateOrderNumber();
-  
-      // Step 3: Add Order to Backend
+
+      // Add Order to Backend
       const orderData = {
         order_number: orderNumber,
         email: formData.email,
-        shipping_method: formData.shipping,
+        shipping_method: "Standard Shipping - FREE", // Fixed to free shipping
         shipping_address: formData.address,
         shipping_cost: shippingCost,
         items: cartItems.map((item) => ({
@@ -175,42 +162,44 @@ const PaymentPage = () => {
         })),
         total_price: totalCost,
       };
-  
+
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/orders/add`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Step 4: Create Product Deliveries
+
+      // Create Product Deliveries
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product-deliveries/create`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Step 5: Clear the Cart
+
+      // Clear the Cart
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/cart/clear`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(orderData.total_price)
-      // Step 6: Navigate to Thank You Page
-      navigate('/thank-you', { state: { order: orderData } });
+
+      // Navigate to Thank You Page
+      navigate("/thank-you", { state: { order: orderData } });
     } catch (err) {
-      console.error('Failed to complete payment or process order', err);
-      alert('An error occurred during the payment process.');
+      console.error("Failed to complete payment or process order", err);
+      alert("An error occurred during the payment process.");
     }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <nav className="flex items-center space-x-2 text-sm mb-8">
-          <Link to="/cart" className="text-gray-500">Cart</Link>
+          <Link to="/cart" className="text-gray-500">
+            Cart
+          </Link>
           <span className="text-gray-300">/</span>
           <span className="text-gray-900">Payment</span>
         </nav>
@@ -222,7 +211,7 @@ const PaymentPage = () => {
               <div className="flex justify-between items-center mb-2">
                 <p className="text-gray-600">Contact</p>
                 <button
-                  onClick={() => handleEdit('email')}
+                  onClick={() => handleEdit("email")}
                   className="text-green-600 text-sm"
                 >
                   Edit
@@ -232,7 +221,7 @@ const PaymentPage = () => {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               ) : (
@@ -245,7 +234,7 @@ const PaymentPage = () => {
               <div className="flex justify-between items-center mb-2">
                 <p className="text-gray-600">Ship to</p>
                 <button
-                  onClick={() => handleEdit('address')}
+                  onClick={() => handleEdit("address")}
                   className="text-green-600 text-sm"
                 >
                   Edit
@@ -255,7 +244,7 @@ const PaymentPage = () => {
                 <input
                   type="text"
                   value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               ) : (
@@ -263,31 +252,6 @@ const PaymentPage = () => {
               )}
             </div>
 
-            {/* Shipping Method */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-gray-600">Method</p>
-                <button
-                  onClick={() => handleEdit('shipping')}
-                  className="text-green-600 text-sm"
-                >
-                  Edit
-                </button>
-              </div>
-              {editing.shipping ? (
-                <select
-                  value={formData.shipping}
-                  onChange={(e) => handleInputChange('shipping', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="Standard Shipping - FREE">Standard Shipping - FREE</option>
-                  <option value="Express Shipping - $9.99">Express Shipping - $9.99</option>
-                </select>
-              ) : (
-                <p className="text-sm">{formData.shipping}</p>
-              )}
-            </div>
-            
             <div className="mb-6">
               <h2 className="text-lg font-medium mb-4">Payment Details</h2>
               <form className="space-y-4">
@@ -295,14 +259,14 @@ const PaymentPage = () => {
                   type="text"
                   placeholder="Card Number"
                   value={formData.cardNumber}
-                  onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                  onChange={(e) => handleInputChange("cardNumber", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 <input
                   type="text"
                   placeholder="Holder Name"
                   value={formData.holderName}
-                  onChange={(e) => handleInputChange('holderName', e.target.value)}
+                  onChange={(e) => handleInputChange("holderName", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 <div className="grid grid-cols-2 gap-4">
@@ -310,14 +274,14 @@ const PaymentPage = () => {
                     type="text"
                     placeholder="Expiration (MM/YY)"
                     value={formData.expiration}
-                    onChange={(e) => handleInputChange('expiration', e.target.value)}
+                    onChange={(e) => handleInputChange("expiration", e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="CVV"
                     value={formData.cvv}
-                    onChange={(e) => handleInputChange('cvv', e.target.value)}
+                    onChange={(e) => handleInputChange("cvv", e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -325,8 +289,13 @@ const PaymentPage = () => {
             </div>
 
             <div className="flex items-center justify-between mt-8">
-              <Link to="/cart" className="text-green-600 hover:text-green-700">Back to shopping</Link>
-              <button onClick={handlePayNow} className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors">
+              <Link to="/cart" className="text-green-600 hover:text-green-700">
+                Back to shopping
+              </Link>
+              <button
+                onClick={handlePayNow}
+                className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
+              >
                 Pay now
               </button>
             </div>
@@ -334,10 +303,19 @@ const PaymentPage = () => {
 
           {/* Order Summary */}
           <div>
-            {cartItems.map(item => (
-              <div key={item.product_id} className={`p-4 rounded-md mb-4 ${item.highlight ? 'bg-red-100' : 'bg-gray-50'}`}>
+            {cartItems.map((item) => (
+              <div
+                key={item.product_id}
+                className={`p-4 rounded-md mb-4 ${
+                  item.highlight ? "bg-red-100" : "bg-gray-50"
+                }`}
+              >
                 <div className="flex items-center space-x-4">
-                  <img src={item.image_link} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+                  <img
+                    src={item.image_link}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
                     <p className="text-green-600">
@@ -350,13 +328,19 @@ const PaymentPage = () => {
                         <span>${item.price}</span>
                       )}
                     </p>
-                    {item.notification && <p className="text-sm text-red-600">{item.notification}</p>}
+                    {item.notification && (
+                      <p className="text-sm text-red-600">{item.notification}</p>
+                    )}
                   </div>
                 </div>
                 <p className="mt-2 text-right">Quantity: {item.quantity}</p>
               </div>
             ))}
-            <OrderSummary cartItems={cartItems} total={totalCost} shippingCost={shippingCost} />
+            <OrderSummary
+              cartItems={cartItems}
+              total={totalCost}
+              shippingCost={shippingCost}
+            />
           </div>
         </div>
       </main>

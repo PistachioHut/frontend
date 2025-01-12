@@ -28,16 +28,6 @@ const OrderSummary = ({ order }) => (
           </div>
         ))}
         <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Subtotal</span>
-            <span>${(Number(order.total_price || 0) - (order.shipping === "Express Shipping - $9.99" ? 9.99 : 0))}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Shipping</span>
-            <span className="text-green-600">
-              {order.shipping === "Express Shipping - $9.99" ? "$9.99" : "Free"}
-            </span>
-          </div>
           <div className="flex justify-between items-center pt-3 border-t border-gray-200">
             <span className="font-medium">Total</span>
             <span className="text-green-600">${Number(order.total_price || 0)}</span>
