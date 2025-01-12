@@ -20,7 +20,7 @@ const Contact = () => {
                 Contact <span className="text-green-600">Us</span>
               </h1>
               <p className="text-lg text-gray-700 leading-relaxed">
-                We'd love to hear from you! Feel free to reach out using the information below or send us a message.
+              We value your feedback and inquiries. Please don't hesitate to contact us using the details provided below or send us a message directly.
               </p>
             </div>
           </div>
@@ -40,7 +40,7 @@ const Contact = () => {
                   </li>
                   <li>
                     <strong>Customer Service Hours:</strong> <br />
-                    Monday - Friday: 9:00 AM - 6:00 PM EST
+                    Monday - Friday: 9:00 AM - 6:00 PM GMT+3
                   </li>
                   <li>
                     <strong>Business Address:</strong> <br />
