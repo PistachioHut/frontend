@@ -1,60 +1,86 @@
-# Online Store - Frontend Repository
+# **Online Store - Frontend Repository**
 
-## 📚 Overview
-This repository contains the **frontend code** for the Online Store project, developed as part of the **CS308 Software Engineering course** at Sabanci University. The application allows users to browse products, add them to a shopping cart, and purchase them, while also providing features for administrators to manage products and orders. The frontend is built using **React.js**, ensuring a modern, dynamic, and responsive user interface.
+## 📚 **Overview**
+This repository contains the **frontend code** for the **Online Store Project**, developed as part of the **CS308 Software Engineering course** at Sabanci University. The application enables users to:
+- Browse products.
+- Add items to a shopping cart.
+- Complete purchases.
 
----
-
-## 🚀 Features
-- **Homepage**: Displays featured products, and testimonials.
-- **Product Pages**: Detailed view of individual products.
-- **Shopping Cart**: Add, remove, and adjust product quantities.
-- **User Authentication**: Login, register, and manage accounts.
-- **Checkout**: Mock payment flow with order summary and confirmation.
-- **Admin Dashboard**: Tools for managing products, users, and orders.
+It also includes an **Admin Dashboard** for managing products, users, and orders. Built with **React.js**, the frontend delivers a modern, dynamic, and responsive user interface.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 **Features**
+- **Homepage**: Displays featured products, categories, and user testimonials.
+- **Product Pages**: Provides detailed information about individual products, including descriptions, prices, and availability.
+- **Shopping Cart**: Allows users to:
+  - Add, remove, and adjust product quantities.
+  - View a summary of selected items.
+- **User Authentication**: Features include:
+  - Registration and login.
+  - Account management.
+- **Checkout Flow**: Simulates:
+  - Payment processing.
+  - Order summaries.
+  - Confirmation messages.
+- **Admin Dashboard**:
+  - Manage products and categories.
+  - View and handle user orders.
+  - Monitor inventory.
+- **Contact Us & About Us**:
+  - Additional pages for contact and about us sections.
+
+---
+
+## 🛠️ **Tech Stack**
 ### **Frontend**
-- **React.js**: Main framework for building the user interface.
-- **CSS**: Styling for components and layouts.
-- **React Router**: Handles navigation between pages.
+- **React.js**: Framework for building dynamic and modular user interfaces.
+- **CSS**: Custom styling for a professional look and feel.
+- **React Router**: Seamless navigation between pages and views.
 
-## 🔧 Setup Instructions
-Follow these steps to run the project locally:
+---
+
+## 🔧 **Setup Instructions**
+Follow the steps below to run the project locally:
 
 ### **Prerequisites**
-- **Node.js** (v16+): Install from [Node.js official site](https://nodejs.org/).
-- **Git**: Ensure Git is installed on your system.
+- **Node.js (v16+)**: Download and install from the [official Node.js website](https://nodejs.org/).
+- **Git**: Ensure Git is installed on your system for version control.
 
 ### **Steps**
-1. Clone the repository:
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/PistachioHut/online-store-frontend
    ```
-2. Navigate to the project directory:
+2. **Navigate to the Project Directory**:
    ```bash
    cd online-store-frontend
    ```
-3. Install dependencies:
+3. **Install Dependencies**:
    ```bash
    npm install
    ```
-4. Start the development server:
+4. **Start the Development Server**:
    ```bash
    npm start
    ```
-5. Open your browser and navigate to `http://localhost:3000` to view the app.
+5. **View the Application**:
+   Open your browser and navigate to `http://localhost:3000`.
 
 ---
 
-## 🧪 Project Contributors
+## 🧪 **Project Contributors**
+This project is proudly developed by the following team members:
+- **Ismail Cakmak**
+- **Sadiq Qara**
+- **Serhan YILMAZ**
+- **Mustafa Harun Şendur**
+- **Mustafa Mert Yıldızbaş**
+- **Osman Enes Erdoğdu**
 
-- Ismail Cakmak
-- Sadiq Qara
-- Serhan YILMAZ
-- Mustafa Harun Şendur
-- Mustafa Mert Yıldızbaş
-- Osman Enes Erdoğdu
+---
+
+### 🌟 **Note**
+This project is part of a university course and simulates a production-ready online store application. The frontend works in tandem with the backend repository, which handles APIs, database management, and server-side operations.
+
 ---
