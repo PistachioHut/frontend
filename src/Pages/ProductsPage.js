@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, SortAsc } from 'lucide-react';
+import { Search, ArrowUpDown, ArrowDownAZ, ArrowUpAZ } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import axios from 'axios';
@@ -197,7 +197,11 @@ const ProductsPage = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <SortAsc size={20} className="text-gray-500" />
+            {sortOrder === 'asc' ? (
+              <ArrowDownAZ size={20} className="text-gray-500" />
+            ) : (
+              <ArrowUpAZ size={20} className="text-gray-500" />
+            )}
             <select
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value)}
