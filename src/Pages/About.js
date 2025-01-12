@@ -31,7 +31,7 @@ const About = () => {
             <section className="mb-16">
               <h2 className="text-4xl font-bold text-center mb-8 text-green-600">Our Story</h2>
               <p className="text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto">
-                At PistachioHut, we're dedicated to bringing you the finest pistachios from our carefully maintained orchards.
+                At PistachioHut, we are dedicated to bringing you the finest pistachios from our carefully maintained orchards.
                 Our journey began with a simple mission: to provide the highest quality pistachios while maintaining sustainable
                 and ethical farming practices.
               </p>
@@ -48,7 +48,7 @@ const About = () => {
                   </li>
                   <li>
                     <strong>Sustainable Practices:</strong> We are committed to using environmentally friendly farming methods,
-                    including water conservation, renewable energy, and minimal packaging waste.
+                    including water conservation, renewable energy and minimal packaging waste.
                   </li>
                   <li>
                     <strong>Fair Trade Partnerships:</strong> Collaborating directly with local farmers ensures fair wages and
@@ -56,7 +56,7 @@ const About = () => {
                   </li>
                   <li>
                     <strong>Health and Nutrition:</strong> PistachioHut pistachios are packed with essential nutrients, making them
-                    a healthy, guilt-free snack for every occasion.
+                    a healthy, guilt-free snack for every occasion and for everyone.
                   </li>
                   <li>
                     <strong>Customer Satisfaction:</strong> Our loyal customers appreciate our dedication to transparency, quality,
