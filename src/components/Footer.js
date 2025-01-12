@@ -46,7 +46,7 @@ const Footer = () => {
   const dialogContents = {
     shipping: {
       title: 'Shipping Information',
-      content: 'We offer worldwide shipping with careful packaging to ensure your pistachios arrive fresh and intact. Standard shipping takes 3-5 business days, while express shipping is available for 1-2 day delivery.'
+      content: 'We offer worldwide shipping with careful packaging to ensure your pistachios arrive fresh and intact. Standard shipping takes 3-5 business days and is provided free of charge for our valued customers.'
     },
     contact: {
       title: 'Contact Us',
@@ -58,7 +58,7 @@ const Footer = () => {
     },
     help: {
       title: 'Help Center',
-      content: 'Need assistance? Check out our comprehensive FAQ section, shipping guidelines, and return policy. Still have questions? Our customer support team is just a click away.'
+      content: 'Need assistance? Check out our shipping guidelines and return policy. Still have questions? Our customer support team is just a click away.'
     },
     terms: {
       title: 'Terms & Conditions',
