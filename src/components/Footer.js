@@ -53,8 +53,8 @@ const Footer = () => {
       content: "We're here to help! Reach out to us via email at support@pistachiohut.com or call us at +1 (555) 123-4567. Our customer service team is available Monday through Friday, 9 AM to 6 PM EST."
     },
     privacy: {
-      title: 'Privacy Notice',
-      content: 'We take your privacy seriously. Your personal information is secured using industry-standard encryption and is never shared with third parties without your explicit consent.'
+      title: 'Return Policy',
+      content: 'We offer a generous 30-day return policy for all products. If you are not satisfied with your purchase, please contact us within 30 days of receiving your order. A manager will process your return and refund your purchase price if you qualify.'
     },
     help: {
       title: 'Help Center',
