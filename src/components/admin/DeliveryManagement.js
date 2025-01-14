@@ -23,11 +23,9 @@ const DeliveryManagement = () => {
         }
       );
 
-      // Exclude completed orders
       const incompleteDeliveries = response.data.deliveries.filter(
-        (delivery) => delivery.status != "complete"
+        (delivery) => delivery.status !== "complete"
       );
-      console.log(incompleteDeliveries);
       setDeliveries(incompleteDeliveries);
     } catch (err) {
       console.error("Failed to fetch deliveries:", err);
@@ -57,9 +55,28 @@ const DeliveryManagement = () => {
     }
   };
 
+  const markAsInTransit = async (deliveryId) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      await axios.patch(
+        `${process.env.REACT_APP_BACKEND_URL}/deliveries/in-transit/${deliveryId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("Delivery marked as in-transit!");
+      fetchDeliveries(); // Refresh the list
+    } catch (err) {
+      console.error("Failed to update delivery status:", err);
+      alert("Failed to mark delivery as in-transit. Please try again.");
+    }
+  };
+
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Delivery Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Delivery List</h1>
 
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -74,6 +91,7 @@ const DeliveryManagement = () => {
               <th className="px-4 py-2 border border-gray-200">Quantity</th>
               <th className="px-4 py-2 border border-gray-200">Total Price</th>
               <th className="px-4 py-2 border border-gray-200">Delivery Address</th>
+              <th className="px-4 py-2 border border-gray-200">Status</th>
               <th className="px-4 py-2 border border-gray-200">Invoice</th>
               <th className="px-4 py-2 border border-gray-200">Actions</th>
             </tr>
@@ -100,6 +118,9 @@ const DeliveryManagement = () => {
                   {delivery.delivery_address}
                 </td>
                 <td className="px-4 py-2 border border-gray-200">
+                  {delivery.status}
+                </td>
+                <td className="px-4 py-2 border border-gray-200">
                   {delivery.invoice_url ? (
                     <a
                       href={delivery.invoice_url}
@@ -113,7 +134,7 @@ const DeliveryManagement = () => {
                     "No Invoice"
                   )}
                 </td>
-                <td className="px-4 py-2 border border-gray-200">
+                <td className="px-4 py-2 border border-gray-200 flex space-x-2">
                   <button
                     onClick={() =>
                       markAsCompleted(delivery.delivery_id, delivery.customer_id)
@@ -121,6 +142,12 @@ const DeliveryManagement = () => {
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                   >
                     Mark as Completed
+                  </button>
+                  <button
+                    onClick={() => markAsInTransit(delivery.delivery_id)}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+                  >
+                    Mark as In-Transit
                   </button>
                 </td>
               </tr>

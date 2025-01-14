@@ -5,29 +5,19 @@ const DiscountManagement = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editedDiscountedPrices, setEditedDiscountedPrices] = useState({}); // Track edited discounted prices
+  const [editedDiscountPercentages, setEditedDiscountPercentages] = useState({});
 
-  // Fetch all products from the backend
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/products/all`
-        );
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/products/all`);
         const updatedProducts = response.data.map((product) => ({
           ...product,
-          price: Number(product.price), // Ensure price is a number
-          discounted_price: Number(product.discounted_price || product.price), // Ensure discounted_price is a number
+          price: Number(product.price),
+          discounted_price: Number(product.discounted_price || product.price),
         }));
         setProducts(updatedProducts);
-
-        // Initialize editedDiscountedPrices with the current discounted prices
-        const initialDiscountedPrices = {};
-        updatedProducts.forEach((product) => {
-          initialDiscountedPrices[product.id] = product.discounted_price;
-        });
-        setEditedDiscountedPrices(initialDiscountedPrices);
       } catch (err) {
         console.error("Failed to fetch products:", err);
         setError("Failed to load products.");
@@ -39,17 +29,33 @@ const DiscountManagement = () => {
     fetchProducts();
   }, []);
 
-  // Handle local discounted price changes
-  const handleDiscountedPriceChange = (id, newDiscountedPrice) => {
-    setEditedDiscountedPrices((prevPrices) => ({
-      ...prevPrices,
-      [id]: newDiscountedPrice, // Update only the edited discounted price
+  const refreshProductData = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/products/all`);
+      const updatedProducts = response.data.map((product) => ({
+        ...product,
+        price: Number(product.price),
+        discounted_price: Number(product.discounted_price || product.price),
+      }));
+      setProducts(updatedProducts);
+    } catch (err) {
+      console.error("Failed to refresh products:", err);
+    }
+  };
+
+  const handleDiscountPercentageChange = (id, percentage) => {
+    setEditedDiscountPercentages((prev) => ({
+      ...prev,
+      [id]: percentage,
     }));
   };
 
   const handleUpdateDiscountedPrice = async (id) => {
-    const newDiscountedPrice = editedDiscountedPrices[id];
-    if (!newDiscountedPrice) return;
+    const discountPercentage = editedDiscountPercentages[id];
+    if (!discountPercentage) return;
+  
+    const product = products.find((p) => p.id === id);
+    const newDiscountedPrice = (product.price * (1 - discountPercentage / 100)).toFixed(2);
   
     const updatedData = {
       discounted_price: parseFloat(newDiscountedPrice),
@@ -57,7 +63,6 @@ const DiscountManagement = () => {
   
     const token = localStorage.getItem("accessToken");
     try {
-      // Update the product discounted_price in the backend
       await axios.patch(
         `${process.env.REACT_APP_BACKEND_URL}/products/update/${id}`,
         updatedData,
@@ -68,7 +73,6 @@ const DiscountManagement = () => {
         }
       );
   
-      // Notify users who have the product wishlisted
       await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/notify-wishlist-users`,
         { product_id: id },
@@ -79,14 +83,19 @@ const DiscountManagement = () => {
         }
       );
   
-      // Update the product in the state
-      setProducts((prevProducts) =>
-        prevProducts.map((product) =>
+      setProducts((prev) =>
+        prev.map((product) =>
           product.id === id
             ? { ...product, discounted_price: parseFloat(newDiscountedPrice) }
             : product
         )
       );
+  
+      // Clear the input field for this product
+      setEditedDiscountPercentages((prev) => ({
+        ...prev,
+        [id]: "",
+      }));
   
       alert("Discount updated and users notified successfully.");
     } catch (err) {
@@ -101,7 +110,7 @@ const DiscountManagement = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-xl font-bold mb-4">Update Discounted Prices</h1>
+      <h1 className="text-xl font-bold mb-4">Update Discounts</h1>
       {products.length === 0 ? (
         <p>No products available.</p>
       ) : (
@@ -110,37 +119,30 @@ const DiscountManagement = () => {
             <tr>
               <th className="px-4 py-2 border border-gray-200">Product Name</th>
               <th className="px-4 py-2 border border-gray-200">Current Price</th>
-              <th className="px-4 py-2 border border-gray-200">
-                Current Discounted Price
-              </th>
-              <th className="px-4 py-2 border border-gray-200">
-                New Discounted Price
-              </th>
+              <th className="px-4 py-2 border border-gray-200">Current Discounted Price</th>
+              <th className="px-4 py-2 border border-gray-200">Discount %</th>
+              <th className="px-4 py-2 border border-gray-200">Calculated Discounted Price</th>
               <th className="px-4 py-2 border border-gray-200">Actions</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product) => (
               <tr key={product.id}>
-                <td className="px-4 py-2 border border-gray-200">
-                  {product.name}
-                </td>
-                <td className="px-4 py-2 border border-gray-200">
-                  ${product.price.toFixed(2)}
-                </td>
-                <td className="px-4 py-2 border border-gray-200">
-                  ${product.discounted_price.toFixed(2)}
-                </td>
+                <td className="px-4 py-2 border border-gray-200">{product.name}</td>
+                <td className="px-4 py-2 border border-gray-200">${product.price.toFixed(2)}</td>
+                <td className="px-4 py-2 border border-gray-200">${product.discounted_price.toFixed(2)}</td>
                 <td className="px-4 py-2 border border-gray-200">
                   <input
                     type="number"
-                    step="0.01"
-                    value={editedDiscountedPrices[product.id] || ""}
-                    onChange={(e) =>
-                      handleDiscountedPriceChange(product.id, e.target.value)
-                    }
+                    step="1"
+                    value={editedDiscountPercentages[product.id] || ""}
+                    onChange={(e) => handleDiscountPercentageChange(product.id, e.target.value)}
                     className="border border-gray-300 rounded px-2 py-1"
+                    placeholder="Discount %"
                   />
+                </td>
+                <td className="px-4 py-2 border border-gray-200">
+                  ${((product.price * (1 - (editedDiscountPercentages[product.id] || 0) / 100)) || product.price).toFixed(2)}
                 </td>
                 <td className="px-4 py-2 border border-gray-200">
                   <button

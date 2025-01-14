@@ -49,7 +49,7 @@ const PaymentPage = () => {
   const [shippingCost] = useState(0); // Always 0 as shipping is free
   const [formData, setFormData] = useState({
     email: isAuthenticated && user ? user.email : "",
-    address: "",
+    address: isAuthenticated && user ? user.homeAddress : "",
     cardNumber: "",
     holderName: "",
     expiration: "",
@@ -65,7 +65,7 @@ const PaymentPage = () => {
     const fetchCartItems = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await axios.get(process.env.REACT_APP_BACKEND_URL + "/cart", {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/cart`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -125,13 +125,17 @@ const PaymentPage = () => {
   };
 
   const handlePayNow = async () => {
+    const cardNumberLength = formData.cardNumber.replace(/\s+/g, "").length;
+    if (!formData.cardNumber || cardNumberLength < 16) {
+      alert("Please enter a valid 16-digit card number.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("accessToken");
-  
-      // Deduct Stock and Increase Popularity for Each Product
+
       for (let item of cartItems) {
         if (item.quantity > 0) {
-          // Decrease Stock
           await axios.patch(
             `${process.env.REACT_APP_BACKEND_URL}/products/stock/decrease/${item.product_id}`,
             { quantity: item.quantity },
@@ -141,8 +145,7 @@ const PaymentPage = () => {
               },
             }
           );
-  
-          // Increase Popularity
+
           await axios.patch(
             `${process.env.REACT_APP_BACKEND_URL}/products/popularity/increase/${item.product_id}`,
             { quantity: item.quantity },
@@ -154,15 +157,12 @@ const PaymentPage = () => {
           );
         }
       }
-  
-      // Generate Order Number
+
       const orderNumber = generateOrderNumber();
-  
-      // Add Order to Backend
       const orderData = {
         order_number: orderNumber,
         email: formData.email,
-        shipping_method: "Standard Shipping - FREE", // Fixed to free shipping
+        shipping_method: "Standard Shipping - FREE",
         shipping_address: formData.address,
         shipping_cost: shippingCost,
         items: cartItems.map((item) => ({
@@ -174,35 +174,32 @@ const PaymentPage = () => {
         })),
         total_price: totalCost,
       };
-  
+
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/orders/add`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Create Product Deliveries
+
       await axios.post(`${process.env.REACT_APP_BACKEND_URL}/product-deliveries/create`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Clear the Cart
+
       await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/cart/clear`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
-      // Navigate to Thank You Page
+
       navigate("/thank-you", { state: { order: orderData } });
     } catch (err) {
       console.error("Failed to complete payment or process order", err);
       alert("An error occurred during the payment process.");
     }
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -218,7 +215,6 @@ const PaymentPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
-            {/* Contact Info */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <p className="text-gray-600">Contact</p>
@@ -234,14 +230,13 @@ const PaymentPage = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               ) : (
                 <p className="text-sm">{formData.email}</p>
               )}
             </div>
 
-            {/* Shipping Address */}
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <p className="text-gray-600">Ship to</p>
@@ -257,7 +252,7 @@ const PaymentPage = () => {
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
               ) : (
                 <p className="text-sm">{formData.address}</p>
@@ -272,14 +267,14 @@ const PaymentPage = () => {
                   placeholder="Card Number"
                   value={formData.cardNumber}
                   onChange={(e) => handleInputChange("cardNumber", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
                 <input
                   type="text"
                   placeholder="Holder Name"
                   value={formData.holderName}
                   onChange={(e) => handleInputChange("holderName", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <input
@@ -287,14 +282,14 @@ const PaymentPage = () => {
                     placeholder="Expiration (MM/YY)"
                     value={formData.expiration}
                     onChange={(e) => handleInputChange("expiration", e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
                   />
                   <input
                     type="text"
                     placeholder="CVV"
                     value={formData.cvv}
                     onChange={(e) => handleInputChange("cvv", e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-md"
                   />
                 </div>
               </form>
@@ -306,21 +301,18 @@ const PaymentPage = () => {
               </Link>
               <button
                 onClick={handlePayNow}
-                className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
+                className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600"
               >
                 Pay now
               </button>
             </div>
           </div>
 
-          {/* Order Summary */}
           <div>
             {cartItems.map((item) => (
               <div
                 key={item.product_id}
-                className={`p-4 rounded-md mb-4 ${
-                  item.highlight ? "bg-red-100" : "bg-gray-50"
-                }`}
+                className={`p-4 rounded-md mb-4 ${item.highlight ? "bg-red-100" : "bg-gray-50"}`}
               >
                 <div className="flex items-center space-x-4">
                   <img
@@ -348,11 +340,7 @@ const PaymentPage = () => {
                 <p className="mt-2 text-right">Quantity: {item.quantity}</p>
               </div>
             ))}
-            <OrderSummary
-              cartItems={cartItems}
-              total={totalCost}
-              shippingCost={shippingCost}
-            />
+            <OrderSummary cartItems={cartItems} total={totalCost} shippingCost={shippingCost} />
           </div>
         </div>
       </main>

@@ -126,6 +126,8 @@ const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [taxId, setTaxId] = useState(''); // State for Tax ID
+  const [homeAddress, setHomeAddress] = useState(''); // State for Home Address
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -142,6 +144,8 @@ const SignupPage = () => {
         username,
         email,
         password,
+        taxId, // Include Tax ID in payload
+        homeAddress, // Include Home Address in payload
       });
       setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000); // Redirect to login after 2 seconds
@@ -193,6 +197,23 @@ const SignupPage = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm Password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              value={taxId}
+              onChange={(e) => setTaxId(e.target.value)}
+              placeholder="Tax ID"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <textarea
+              value={homeAddress}
+              onChange={(e) => setHomeAddress(e.target.value)}
+              placeholder="Home Address"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>

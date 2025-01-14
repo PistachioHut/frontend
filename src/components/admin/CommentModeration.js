@@ -103,7 +103,7 @@ const CommentModeration = () => {
               <tr key={review.review_id} className="border-t">
                 <td className="px-4 py-2">{review.product_name}</td>
                 <td className="px-4 py-2">{review.user_id}</td>
-                <td className="px-4 py-2">{review.content}</td>
+                <td className="px-4 py-2">{review.review_text}</td>
                 <td className="px-4 py-2">
                   <StarRating rating={review.rating} />
                 </td>

@@ -22,11 +22,25 @@ const ProductCard = ({ id, name, price, discountedPrice, image, stockCount }) =>
     navigate(`/product/${id}`);
   };
 
+  // Calculate discount percentage
+  const discountPercentage = discountedPrice < price 
+    ? Math.round(((price - discountedPrice) / price) * 100) 
+    : null;
+
   return (
     <div
-      className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer relative"
+      className={`relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer ${
+        stockCount === 0 ? 'opacity-70 cursor-not-allowed' : ''
+      }`}
       onClick={handleClick}
     >
+      {/* Out of Stock Badge */}
+      {stockCount === 0 && (
+        <div className="absolute top-2 left-2 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold z-10">
+          Out of Stock
+        </div>
+      )}
+      
       <div className="aspect-square overflow-hidden">
         <img
           src={image}
@@ -43,20 +57,19 @@ const ProductCard = ({ id, name, price, discountedPrice, image, stockCount }) =>
                 ${price}
               </span>
               <span className="text-lg font-semibold text-green-600">${discountedPrice}</span>
+              <span className="text-sm font-medium text-green-500">
+                ({discountPercentage}% off)
+              </span>
             </>
           ) : (
             <span className="text-lg font-semibold text-green-600">${price}</span>
           )}
         </div>
       </div>
-      {stockCount === 0 && (
-        <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs">
-          Out of Stock
-        </div>
-      )}
     </div>
   );
 };
+
 
 const CategoryHeader = ({ category }) => (
   <div className="col-span-full my-6 first:mt-0">
@@ -239,7 +252,7 @@ const ProductsPage = () => {
                       price={product.price}
                       discountedPrice={product.discounted_price || product.price}
                       image={product.image_link}
-                      stockCount={product.stockCount}
+                      stockCount={product.quantity_in_stock}
                     />
                   ))}
                 </React.Fragment>
@@ -258,7 +271,7 @@ const ProductsPage = () => {
                 price={product.price}
                 discountedPrice={product.discounted_price || product.price}
                 image={product.image_link}
-                stockCount={product.stockCount}
+                stockCount={product.quantity_in_stock}
               />
             ))
           )}

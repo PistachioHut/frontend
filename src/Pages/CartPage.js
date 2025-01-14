@@ -110,7 +110,7 @@ const CartPage = () => {
 
   const handleUpdateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) return;
-
+  
     if (isAuthenticated) {
       // Authenticated users update quantity in backend
       axios
@@ -119,6 +119,16 @@ const CartPage = () => {
           { quantity: newQuantity },
           { headers: { Authorization: `Bearer ${token}` } }
         )
+        .then(() => {
+          // Update the cartItems state locally
+          setCartItems((prevItems) =>
+            prevItems.map((item) =>
+              item.product_id === productId
+                ? { ...item, quantity: newQuantity }
+                : item
+            )
+          );
+        })
         .catch(() => setError("Failed to update quantity in the cart."));
     } else {
       // Unauthenticated users update quantity in local storage
@@ -133,6 +143,7 @@ const CartPage = () => {
       });
     }
   };
+  
 
   const handleRemoveItem = (productId) => {
     if (isAuthenticated) {

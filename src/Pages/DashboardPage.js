@@ -10,6 +10,7 @@ const OrderPanel = ({ order, setOrders }) => {
   const { user } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const [productStatuses, setProductStatuses] = useState([]);
+  const daysSinceOrder = Math.floor((new Date() - new Date(order.created_at)) / (1000 * 60 * 60 * 24));
 
   useEffect(() => {
     const fetchProductStatuses = async () => {
@@ -59,6 +60,7 @@ const OrderPanel = ({ order, setOrders }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setOrders(ordersResponse.data.order_history);
+      
     } catch (error) {
       console.error('Failed to process refund:', error);
       alert('Failed to submit refund request.');
@@ -127,7 +129,9 @@ const OrderPanel = ({ order, setOrders }) => {
         </div>
         <div className="px-2">
           <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Date</p>
-          <p className="font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
+          <p className="font-medium">
+            {new Date(order.created_at).toLocaleDateString('en-GB')}
+          </p>
         </div>
         <div className="px-2">
           <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Amount</p>
@@ -170,6 +174,9 @@ const OrderPanel = ({ order, setOrders }) => {
                   const productStatus = productStatuses.find((p) => p.product_id === item.product_id);
 
                   const refundButtonState = (() => {
+                    if (daysSinceOrder > 30) {
+                      return { disabled: true, message: 'Refund Expired', className: 'bg-gray-200 text-gray-500 cursor-not-allowed' };
+                    }
                     if (item.refund_processing === 'Processing') {
                       return { disabled: true, message: 'Refund Processing', className: 'bg-gray-200 text-gray-500 cursor-not-allowed' };
                     }
@@ -183,7 +190,7 @@ const OrderPanel = ({ order, setOrders }) => {
                       return { disabled: true, message: 'Delivered', className: 'bg-gray-200 text-gray-500 cursor-not-allowed' };
                     }
                     return { disabled: false, message: 'Request Refund', className: 'bg-red-500 text-white hover:bg-red-600' };
-                  })();
+                  })();                  
 
                   return (
                     <tr key={item.product_id} className="border-t">
@@ -193,13 +200,14 @@ const OrderPanel = ({ order, setOrders }) => {
                       <td className="px-4 py-2">{item.status || 'Pending'}</td>
                       <td className="px-4 py-2">{item.refund_processing || 'N/A'}</td>
                       <td className="px-4 py-2">
-                        <button
-                          onClick={() => handleRefund(item)}
-                          disabled={refundButtonState.disabled}
-                          className={`px-3 py-1 text-sm rounded-md transition-colors ${refundButtonState.className}`}
-                        >
-                          {refundButtonState.message}
-                        </button>
+                      <button
+                        onClick={() => handleRefund(item)}
+                        disabled={refundButtonState.disabled}
+                        className={`px-3 py-1 text-sm rounded-md transition-colors ${refundButtonState.className}`}
+                      >
+                        {refundButtonState.message}
+                      </button>
+
                       </td>
                     </tr>
                   );
@@ -228,7 +236,9 @@ const WishlistItem = ({ item }) => {
         </div>
         <div className="col-span-2 px-2">
           <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">Added On</p>
-          <p className="font-medium">{new Date(item.added_on).toLocaleDateString()}</p>
+          <p className="font-medium">
+            {new Date(item.added_on).toLocaleDateString('en-GB')}
+          </p>
         </div>
         <div className="col-span-2 px-2">
           <Link 
@@ -257,12 +267,18 @@ const DashboardPage = () => {
         const ordersResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/user/orders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setOrders(ordersResponse.data.order_history);
+        
+        setOrders(
+          ordersResponse.data.order_history.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        );
 
         const wishlistResponse = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/wishlist`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setWishlist(wishlistResponse.data.wishlist);
+        
+        setWishlist(
+          wishlistResponse.data.wishlist.sort((a, b) => new Date(b.added_on) - new Date(a.added_on))
+        );
       } catch (error) {
         console.error('Failed to fetch data:', error);
       }
